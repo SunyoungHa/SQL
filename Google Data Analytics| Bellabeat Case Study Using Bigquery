@@ -1,0 +1,104 @@
+/* Source: https://www.kaggle.com/datasets/arashnic/fitbit */
+
+-- Check for missing values and duplicates:
+SELECT  
+COUNT(*) AS total_rows, 
+COUNT(DISTINCT id) AS unique_users  
+FROM `capstone.daily_activity` ;
+
+
+-- Identify data inconsistencies:
+SELECT * 
+FROM  `capstone.daily_activity` 
+WHERE TotalSteps < 0 OR Calories < 0;
+
+
+-- Daily Steps Analysis
+SELECT avg(TotalSteps) as avg,
+max(TotalSteps) as max,
+min(TotalSteps) as min
+FROM  `capstone.daily_activity` 
+group by Id
+order by avg Desc;
+
+
+-- Calories Burned vs. Steps
+select 
+TotalSteps,
+Calories
+FROM  `capstone.daily_activity` 
+order by TotalSteps desc;
+
+
+-- Identify Suspicious Data Entries
+-- if burn more than 2000 calories without steps, flag it as suspicious.
+SELECT 
+    Id, 
+    TotalSteps, 
+    Calories, 
+    CASE 
+        WHEN TotalSteps = 0 and Calories>2000 THEN 'Suspicious'
+        ELSE 'Valid'
+    END AS Data_Validity
+FROM  `capstone.daily_activity` 
+
+
+--Data summary 
+SELECT Id,
+MIN(TotalSteps) AS Min_Total_Steps,
+MAX(TotalSteps) AS Max_Total_Steps, 
+AVG(TotalSteps) AS Avg_Total_Stpes,
+MIN(TotalDistance) AS Min_Total_Distance, 
+MAX(TotalDistance) AS Max_Total_Distance, 
+AVG(TotalDistance) AS Avg_Total_Distance,
+MIN(Calories) AS Min_Total_Calories,
+MAX(Calories) AS Max_Total_Calories,
+AVG(Calories) AS Avg_Total_Calories,
+MIN(VeryActiveMinutes) AS Min_Very_Active_Minutes,
+MAX(VeryActiveMinutes) AS Max_Very_Active_Minutes,
+AVG(VeryActiveMinutes) AS Avg_Very_Active_Minutes,
+MIN(FairlyActiveMinutes) AS Min_Fairly_Active_Minutes,
+MAX(FairlyActiveMinutes) AS Max_Fairly_Active_Minutes,
+AVG(FairlyActiveMinutes) AS Avg_Fairly_Active_Minutes,
+MIN(LightlyActiveMinutes) AS Min_Lightly_Active_Minutes,
+MAX(LightlyActiveMinutes) AS Max_Lightly_Active_Minutes,
+AVG(LightlyActiveMinutes) AS Avg_Lightly_Active_Minutes,
+MIN(SedentaryMinutes) AS Min_Sedentary_Minutes,
+MAX(SedentaryMinutes) AS Max_Sedentary_Minutes,
+AVG(SedentaryMinutes) AS Avg_Sedentary_Minutes 
+FROM `orbital-science-451920-i7.capstone.daily_activity` 
+group by Id
+order by Id;
+
+
+--Join weight and activity
+SELECT  a.Id, 
+    a.ActivityDate, 
+    a.TotalSteps, 
+    a.Calories, 
+    a.VeryActiveMinutes, 
+    a.SedentaryMinutes, 
+    w.WeightKg, 
+    w.BMI FROM `capstone.daily_activity` a
+  LEFT JOIN `capstone.weight_date_edited` w
+on a.Id = w.Id and a.ActivityDate = w.Date;
+
+
+-- Does More Activity Lead to Lower BMI?
+SELECT 
+    AVG(BMI) AS Avg_BMI, 
+    AVG(VeryActiveMinutes) AS Avg_Very_Active_Minutes, 
+    AVG(SedentaryMinutes) AS Avg_Sedentary_Minutes
+FROM `capstone.daily_activity` a
+JOIN `capstone.weight_date_edited` w
+on a.Id = w.Id and a.ActivityDate = w.Date
+
+
+-- Calorie Burn vs Weight
+SELECT 
+    ROUND(CORR(Calories, WeightKg), 2) AS Correlation 
+FROM `capstone.daily_activity` a
+JOIN `capstone.weight_date_edited` w
+on a.Id = w.Id and a.ActivityDate = w.Date
+
+
